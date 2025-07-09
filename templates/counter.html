@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building People Counter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-yellow: #ffd700;
+            --light-yellow: #fff9c4;
+            --dark-yellow: #ffb300;
+            --amber: #ffc107;
+            --deep-amber: #ff8f00;
+            --warm-yellow: #ffecb3;
+            --golden: #f57f17;
+        }
+        
+        body {
+            background: white;
+            background-attachment: fixed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(255, 193, 7, 0.2);
+        }
+        
+
+        
+
+        
+        .video-container {
+            position: relative;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border-radius: 25px;
+            overflow: hidden;
+            margin: 20px 0;
+            cursor: crosshair;
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.2);
+        }
+        
+        .manual-bbox {
+            position: absolute;
+            border: 3px solid var(--amber);
+            background: rgba(255, 193, 7, 0.3);
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 8px;
+            animation: bboxPulse 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes bboxPulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .bbox-label {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            background: linear-gradient(135deg, var(--amber), var(--dark-yellow));
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(255, 193, 7, 0.3);
+        }
+        
+
+        
+
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--amber) 0%, var(--deep-amber) 100%) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-yellow {
+            background: linear-gradient(135deg, var(--amber), var(--dark-yellow));
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 25px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
+            background: linear-gradient(135deg, var(--dark-yellow), var(--deep-amber));
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+            border: none;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            border: none;
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.5);
+        }
+        
+        .btn-outline-info {
+            border: 2px solid #17a2b8;
+            color: #17a2b8;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-info:hover {
+            background: #17a2b8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(23, 162, 184, 0.3);
+        }
+        
+        .alert {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, rgba(23, 162, 184, 0.2), rgba(0, 172, 193, 0.1));
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .badge {
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .display-4 {
+            color: var(--golden);
+            text-shadow: 2px 2px 4px rgba(245, 127, 23, 0.3);
+            font-weight: 700;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .counter-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 250, 0.8));
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin: 10px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .counter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .counter-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .counter-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .counter-label {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+        
+        .occupancy-card {
+            border-color: #ffc107;
+        }
+        
+        .occupancy-card .counter-icon {
+            color: #ff8f00;
+        }
+        
+        .occupancy-card .counter-value {
+            color: #ff8f00;
+        }
+        
+        .entry-card {
+            border-color: #28a745;
+        }
+        
+        .entry-card .counter-icon {
+            color: #28a745;
+        }
+        
+        .entry-card .counter-value {
+            color: #28a745;
+        }
+        
+        .exit-card {
+            border-color: #dc3545;
+        }
+        
+        .exit-card .counter-icon {
+            color: #dc3545;
+        }
+        
+        .exit-card .counter-value {
+            color: #dc3545;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">
+                    <i class="bi bi-people-fill"></i> Building People Counter
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <button class="btn btn-outline-light btn-sm ms-2" onclick="resetCounts()">
+                        <i class="bi bi-arrow-clockwise"></i> Reset Counts
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="row g-4 mt-3">
+            <!-- Counter Display -->
+            <div class="col-12">
+                <div class="text-center mb-4">
+                    <h1 class="display-4 mb-4">🏢 Building People Counter</h1>
+                    
+                    <!-- Simple Counter Display -->
+                    <div class="row justify-content-center">
+                        <div class="col-md-3">
+                            <div class="counter-card entry-card">
+                                <div class="counter-icon">
+                                    <i class="bi bi-arrow-right-circle-fill"></i>
+                                </div>
+                                <div class="counter-value" id="todayEntries">{{ today_count.total_entries if today_count else 0 }}</div>
+                                <div class="counter-label">Total Entries</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="counter-card exit-card">
+                                <div class="counter-icon">
+                                    <i class="bi bi-arrow-left-circle-fill"></i>
+                                </div>
+                                <div class="counter-value" id="todayExits">{{ today_count.total_exits if today_count else 0 }}</div>
+                                <div class="counter-label">Total Exits</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto-refresh status indicator -->
+
+                </div>
+            </div>
+
+            <!-- Video Feed -->
+            <div class="col-12">
+                <div id="videoContainer" class="video-container">
+                    <img id="videoFeed" 
+                         src="{{ url_for('video_feed') }}" 
+                         alt="Camera Feed" 
+                         class="img-fluid w-100"
+                         style="max-height: 500px; object-fit: contain;">
+                </div>
+                
+                <!-- Counter Controls -->
+                <div class="text-center mb-4">
+                    <!-- <button id="startButton" class="btn btn-success btn-lg me-3" onclick="startCounter()">
+                        <i class="bi bi-play-circle-fill"></i> Start Counter
+                    </button>
+                    <button id="endSessionButton" class="btn btn-warning btn-lg me-3" onclick="endSession()">
+                        <i class="bi bi-stop-circle-fill"></i> End Session
+                    </button> -->
+                </div>
+                
+
+                        </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessages" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let counterStarted = false;
+
+        function startCounter() {
+            console.log('🚀 Starting people counter...');
+            
+            fetch('/start_counter')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Counter start response:', data);
+                    if (data.status === 'success') {
+                        counterStarted = true;
+                        showMessage('People counter started successfully!', 'success');
+                        document.getElementById('startButton').disabled = true;
+                        document.getElementById('endSessionButton').disabled = false;
+                    } else {
+                        showMessage('Failed to start counter: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error starting counter:', error);
+                    showMessage('Error starting counter', 'danger');
+                });
+        }
+
+        function endSession() {
+            console.log('🛑 Ending current session...');
+            
+            fetch('/end_session', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('End session response:', data);
+                    if (data.status === 'success') {
+                        showMessage(`Session ended. Entries: ${data.total_entries}, Exits: ${data.total_exits}`, 'info');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showMessage('Session ended or no active session', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error ending session:', error);
+                    showMessage('Error ending session', 'danger');
+                });
+        }
+
+        function resetCounts() {
+            if (confirm('Are you sure you want to reset all count data? This cannot be undone.')) {
+                const confirmation = prompt('Type "reset" to confirm:');
+                if (confirmation === 'reset') {
+                    const formData = new FormData();
+                    formData.append('confirmation', 'reset');
+                    
+                    fetch('/reset_counts', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showMessage('All counts have been reset', 'success');
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            showMessage('Failed to reset counts: ' + data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error resetting counts:', error);
+                        showMessage('Error resetting counts', 'danger');
+                    });
+                }
+            }
+        }
+
+        function checkCountEvents() {
+            fetch('/check_count_events')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success indicator for saved events
+                        if (data.events.length > 0) {
+                            console.log('🔔 New events detected:', data.events.length);
+                            
+                            // Process each event for detailed logging
+                            data.events.forEach(event => {
+                                const direction = event.direction;
+                                const icon = direction === 'IN' ? '➡️' : '⬅️';
+                                console.log(`${icon} ${direction}: Person detected`);
+                            });
+                            
+                            const eventTypes = data.events.map(e => e.direction).join(', ');
+                            showMessage(`🚶 ${eventTypes} detected - Counters updating...`, 'info');
+                            
+                            // Immediately update counters for real-time feedback
+                            updateCounters();
+                            
+                            // Add visual feedback to the page
+                            flashCounterCards(data.events);
+                            
+                            // Flash the refresh status indicator
+                            flashRefreshStatus();
+                        }
+                        
+                        // Check for warnings
+                        if (data.warning) {
+                            console.warn('⚠️ Auto-save warning:', data.warning);
+                            showMessage(`⚠️ ${data.warning}`, 'warning');
+                        }
+                        
+                    } else if (data.status === 'error') {
+                        console.error('❌ Auto-save error:', data.message);
+                        showMessage(`❌ Auto-save failed: ${data.message}`, 'danger');
+                    }
+                    // 'no_events' status is normal and expected
+                })
+                .catch(error => {
+                    console.error('❌ Auto-save network error:', error);
+                    showMessage('❌ Auto-save connection lost', 'danger');
+                });
+        }
+
+        function flashCounterCards(events) {
+            // Flash the relevant counter cards based on event types
+            events.forEach(event => {
+                let cardElement;
+                if (event.direction === 'IN') {
+                    cardElement = document.querySelector('.entry-card');
+                } else if (event.direction === 'OUT') {
+                    cardElement = document.querySelector('.exit-card');
+                }
+                
+                if (cardElement) {
+                    // Add flash effect
+                    cardElement.style.backgroundColor = 'rgba(40, 167, 69, 0.3)';
+                    cardElement.style.transition = 'background-color 0.5s ease';
+                    
+                    setTimeout(() => {
+                        cardElement.style.backgroundColor = '';
+                    }, 1000);
+                }
+            });
+        }
+
+        function flashRefreshStatus() {
+            const statusElement = document.getElementById('refreshStatus');
+            if (statusElement) {
+                // Temporarily change to info color to show activity
+                statusElement.className = 'badge bg-info';
+                statusElement.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <i class="bi bi-download"></i> Updating counters...
+                `;
+                
+                setTimeout(() => {
+                    // Reset to normal status
+                    statusElement.className = 'badge bg-success';
+                    statusElement.innerHTML = `
+                        <span class="spinner-grow spinner-grow-sm me-2" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-arrow-clockwise"></i> Auto-refresh: Active (250ms)
+                    `;
+                }, 1500);
+            }
+        }
+
+        function updateCounters() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update counter values with animation
+                        updateCounterValue('todayEntries', data.today_entries);
+                        updateCounterValue('todayExits', data.today_exits);
+                        
+                        console.log(`📊 Counters updated: Entries=${data.today_entries}, Exits=${data.today_exits}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating counters:', error);
+                });
+        }
+
+        function updateCounterValue(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent) || 0;
+            
+            if (currentValue !== newValue) {
+                // Add animation class for visual feedback
+                element.style.transform = 'scale(1.1)';
+                element.style.transition = 'transform 0.3s ease';
+                
+                // Update the value
+                element.textContent = newValue;
+                
+                // Remove animation after a short delay
+                setTimeout(() => {
+                    element.style.transform = 'scale(1)';
+                }, 300);
+                
+                console.log(`✨ ${elementId} updated: ${currentValue} → ${newValue}`);
+            }
+        }
+
+        function showMessage(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.getElementById('statusMessages').appendChild(alertDiv);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Manual bounding box functionality
+        let manualBboxes = [];
+        let bboxIdCounter = 1;
+
+        function addManualBoundingBox(x, y) {
+            const videoContainer = document.getElementById('videoContainer');
+            const bbox = document.createElement('div');
+            const bboxId = bboxIdCounter++;
+            
+            // Create bounding box
+            bbox.className = 'manual-bbox';
+            bbox.id = `bbox-${bboxId}`;
+            bbox.style.left = (x - 50) + 'px';
+            bbox.style.top = (y - 50) + 'px';
+            bbox.style.width = '100px';
+            bbox.style.height = '100px';
+            
+            // Create label
+            const label = document.createElement('div');
+            label.className = 'bbox-label';
+            label.textContent = `Person ${bboxId}`;
+            bbox.appendChild(label);
+            
+            videoContainer.appendChild(bbox);
+            manualBboxes.push(bbox);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (bbox.parentNode) {
+                    bbox.remove();
+                    manualBboxes = manualBboxes.filter(b => b !== bbox);
+                }
+            }, 3000);
+            
+            console.log(`📦 Manual bounding box added at (${x}, ${y})`);
+            
+            // Simulate a manual count event
+            simulateCountEvent(x);
+        }
+
+        function simulateCountEvent(x) {
+            // Determine direction based on x position relative to center
+            const videoContainer = document.getElementById('videoContainer');
+            const containerRect = videoContainer.getBoundingClientRect();
+            const centerX = containerRect.width / 2;
+            
+            let direction = x < centerX ? 'EXIT' : 'ENTRY';
+            
+            // Show notification
+            showMessage(`Manual ${direction} detected at X: ${x}`, 'info');
+            
+            // You could also send this to the backend if needed
+            console.log(`🎯 Manual ${direction} event simulated`);
+        }
+
+        function clearAllManualBboxes() {
+            manualBboxes.forEach(bbox => {
+                if (bbox.parentNode) {
+                    bbox.remove();
+                }
+            });
+            manualBboxes = [];
+            console.log('🧹 All manual bounding boxes cleared');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏢 People Counter Interface Loaded');
+            console.log('💾 Auto-save system starting...');
+            
+            // Auto-start counter
+            startCounter();
+            
+            // Check for count events every 250ms for ultra-fast detection
+            setInterval(checkCountEvents, 250);
+            
+            // Update counters every 1 second for real-time display
+            setInterval(updateCounters, 1000);
+            
+            // Initial counter update
+            updateCounters();
+            
+            console.log('🔄 Auto-refresh system started: Events(250ms), Counters(1s)');
+            
+            // Add click handler for manual bounding boxes
+            document.getElementById('videoContainer').addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                addManualBoundingBox(x, y);
+            });
+            
+            // Add keyboard shortcut to clear all bboxes (press 'C')
+            document.addEventListener('keydown', function(e) {
+                if (e.key.toLowerCase() === 'c') {
+                    clearAllManualBboxes();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

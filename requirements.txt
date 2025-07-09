@@ -1,0 +1,9 @@
+Flask
+Bootstrap-Flask
+Flask-SQLAlchemy
+Flask-Hashing
+opencv-python
+mediapipe
+numpy
+Pillow
+SQLAlchemy 
