@@ -108,17 +108,6 @@ self.counting_line_x = frame_width // 2  # Center line position
 - **Performance issues**: Close other apps, reduce resolution, or use GPU acceleration
 - **Database issues**: Check write permissions for `instance/` directory
 
-### Debug Mode
-```bash
-export FLASK_DEBUG=1  # On Windows: set FLASK_DEBUG=1
-python app.py
-```
-
-Test basic detection:
-```bash
-python camera.py  # Simple detection demo
-```
-
 ## Use Cases
 
 - **Building Management**: Track occupancy and usage patterns
