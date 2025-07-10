@@ -1,17 +1,8 @@
 from flask import Flask, redirect, url_for, request, flash, render_template, Response, jsonify
-try:
-    from flask_bootstrap import Bootstrap5
-except ImportError:
-    # Fallback for different Bootstrap-Flask versions
-    try:
-        from bootstrap_flask import Bootstrap5
-    except ImportError:
-        Bootstrap5 = None
-        print("Warning: Bootstrap5 not available - UI may not render properly")
+from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Date, Float, Enum
-from flask_hashing import Hashing
 from datetime import datetime, date
 import os
 import logging
@@ -25,16 +16,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-if Bootstrap5:
-    bootstrap = Bootstrap5(app)
-else:
-    bootstrap = None
-hashing = Hashing(app)
+bootstrap = Bootstrap5(app)
 
 # Configuration
 app.config['SECRET_KEY'] = '*#*hE*H@#*@(#H#*$#jkr(*$))'
-# Use absolute path for database to avoid path resolution issues
-import os
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'people_counter.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
